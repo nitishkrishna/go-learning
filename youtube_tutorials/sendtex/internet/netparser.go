@@ -9,6 +9,7 @@ import (
 
 	// Parse XML
 	"encoding/xml"
+	"strings"
 )
 
 // SitemapIndex ...
@@ -54,22 +55,11 @@ func main() {
 
 	xml.Unmarshal(bytes, &s)
 
-	// fmt.Println(s.Locations)
-
-	myLocs := []string{
-		"https://www.washingtonpost.com/news-sitemaps/politics.xml",
-		"https://www.washingtonpost.com/news-sitemaps/opinions.xml",
-		"https://www.washingtonpost.com/news-sitemaps/local.xml",
-		"https://www.washingtonpost.com/news-sitemaps/sports.xml",
-		"https://www.washingtonpost.com/news-sitemaps/national.xml",
-		"https://www.washingtonpost.com/news-sitemaps/world.xml",
-		"https://www.washingtonpost.com/news-sitemaps/business.xml",
-		"https://www.washingtonpost.com/news-sitemaps/technology.xml"}
-
-	for _, Location := range myLocs {
-		resp, _ := http.Get(Location)
-		bytes, _ := ioutil.ReadAll(resp.Body)
+	for _, Location := range s.Locations {
+		resp, _ = http.Get(strings.TrimSpace(Location))
+		bytes, _ = ioutil.ReadAll(resp.Body)
 		xml.Unmarshal(bytes, &n)
+		resp.Body.Close()
 		// Put Data into NewsMap
 		for idx := range n.Titles {
 			newsMap[n.Titles[idx]] = NewsMap{n.Keywords[idx], n.Locations[idx]}

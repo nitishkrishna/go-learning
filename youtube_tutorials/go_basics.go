@@ -4,11 +4,43 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"runtime"
 )
 
 type person struct {
 	name string
 	age  int
+}
+
+// Simple two argument function
+func mySum(x int, y int) int {
+	return x + y
+}
+
+// Funcs can return errors
+// Go doesn't have exceptions
+func sqrt(x float64) (float64, error) {
+	if x < 0 {
+		return 0, errors.New("Cannot return SQRT of negative number")
+	}
+
+	return math.Sqrt(x), nil
+}
+
+func inc(x int) {
+	x++
+}
+
+func incPointer(x *int) {
+	*x++
+}
+
+// If can evaluate before condition
+func pow(x, n, lim float64) float64 {
+	if v := math.Pow(x, n); v < lim {
+		return v
+	}
+	return lim
 }
 
 func main() {
@@ -53,6 +85,26 @@ func main() {
 	secondSlc := []int{8, 9, 10}
 	slc = append(slc, secondSlc...) // append a slice
 	fmt.Println(slc)
+	slc = slc[1:4] // Subslice
+	fmt.Println(slc)
+
+	// Slices are references to Arrays
+
+	names := [4]string{
+		"John",
+		"Paul",
+		"George",
+		"Ringo",
+	}
+	fmt.Println(names)
+
+	namesA := names[0:2]
+	namesB := names[1:3]
+	fmt.Println(namesA, namesB)
+
+	namesB[0] = "XXX" // This changes names[1] as well
+	fmt.Println(namesA, namesB)
+	fmt.Println(names)
 
 	// Map for key/value pairs
 
@@ -88,9 +140,9 @@ func main() {
 	// Iterate arr
 	fmt.Println("Iterate Arr and Map ")
 
-	names := []string{"Tom", "Dick", "Harry"}
+	newnames := []string{"Tom", "Dick", "Harry"}
 
-	for idx, val := range names {
+	for idx, val := range newnames {
 		fmt.Println("index:", idx, "value:", val)
 	}
 
@@ -130,6 +182,12 @@ func main() {
 	p := person{name: "Nitish", age: 45}
 	fmt.Println(p)
 	fmt.Println("Age:", p.age)
+	// Pointers to structs
+	pPtr := &p
+	personPtr := &person{"Alice", 55}
+	// Doesn't need *
+	pPtr.age = 50
+	fmt.Println(p, personPtr)
 
 	// Variable memory address
 	fmt.Println("Mem Addr and Pointers")
@@ -144,27 +202,33 @@ func main() {
 	incPointer(&i)
 	fmt.Println(i)
 
-}
+	fmt.Println(
+		pow(3, 2, 10),
+		pow(3, 3, 20),
+	)
 
-// Simple two argument function
-func mySum(x int, y int) int {
-	return x + y
-}
-
-// Funcs can return errors
-// Go doesn't have exceptions
-func sqrt(x float64) (float64, error) {
-	if x < 0 {
-		return 0, errors.New("Cannot return SQRT of negative number")
+	// Switch Case
+	fmt.Print("Go runs on ")
+	switch os := runtime.GOOS; os {
+	case "darwin":
+		fmt.Println("OS X.")
+	case "linux":
+		fmt.Println("Linux.")
+	default:
+		// freebsd, openbsd,
+		// plan9, windows...
+		fmt.Printf("%s.", os)
 	}
 
-	return math.Sqrt(x), nil
-}
+	// Long If Else chains can be written as below:
+	t := 100
+	switch {
+	case t < 12:
+		fmt.Println("Good morning!")
+	case t < 17:
+		fmt.Println("Good afternoon.")
+	default:
+		fmt.Println("Good evening.")
+	}
 
-func inc(x int) {
-	x++
-}
-
-func incPointer(x *int) {
-	*x++
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 // Vid 17
@@ -36,11 +37,26 @@ type NewsAggPage struct {
 	News  map[string]NewsMap
 }
 
+var newsAggWaitGroup sync.WaitGroup
+
+// Go routine to pull the news objects
+func newsRoutine(channelObj chan News, Location string) {
+	defer newsAggWaitGroup.Done()
+	var newsObj News
+	resp, _ := http.Get(strings.TrimSpace(Location))
+	bytes, _ := ioutil.ReadAll(resp.Body)
+	// Create a news Obj from response Data
+	xml.Unmarshal(bytes, &newsObj)
+	resp.Body.Close()
+
+	// Fill the News Objects into the Channel
+	channelObj <- newsObj
+}
+
 func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse XML
 	var siteMapIndexObj SitemapIndex
-	var newsObj News
 
 	resp, _ := http.Get("https://www.washingtonpost.com/news-sitemaps/index.xml")
 	bytes, _ := ioutil.ReadAll(resp.Body)
@@ -49,14 +65,24 @@ func newsAggHandler(w http.ResponseWriter, r *http.Request) {
 
 	newsMap := make(map[string]NewsMap)
 
+	// Channel to push News Objects into
+	queue := make(chan News, 30)
+
+	// Call the Go Routines to concurrently pull Info from each XML
 	for _, Location := range siteMapIndexObj.Locations {
-		resp, _ := http.Get(strings.TrimSpace(Location))
-		bytes, _ := ioutil.ReadAll(resp.Body)
-		xml.Unmarshal(bytes, &newsObj)
-		resp.Body.Close()
-		// Put Data into NewsMap
-		for idx := range newsObj.Titles {
-			newsMap[newsObj.Titles[idx]] = NewsMap{newsObj.Keywords[idx], newsObj.Locations[idx]}
+		newsAggWaitGroup.Add(1)
+		go newsRoutine(queue, Location)
+	}
+
+	// Wait for channel Buffer to fill, then close it
+	newsAggWaitGroup.Wait()
+	close(queue)
+
+	// Iterate the Channel to get news Type Objects
+	for elem := range queue {
+		// Each News Object has a number of Keywords
+		for idx := range elem.Keywords {
+			newsMap[elem.Titles[idx]] = NewsMap{elem.Keywords[idx], elem.Locations[idx]}
 		}
 	}
 
