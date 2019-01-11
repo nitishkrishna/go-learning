@@ -187,12 +187,12 @@ func closeChannel() {
 }
 
 func main() {
-	//sendAndReceive()
+	sendAndReceive()
 	bufferedChannel(2)
-	//syncRoutinesUsingChannels()
-	//channelDirections()
-	//channelSelection()
-	//channelTimeouts()
-	//nonBlockingChannels()
+	syncRoutinesUsingChannels()
+	channelDirections()
+	channelSelection()
+	channelTimeouts()
+	nonBlockingChannels()
 	closeChannel()
 }

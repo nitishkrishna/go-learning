@@ -293,10 +293,10 @@ func shareStateViaGoRoutines() {
 }
 
 func main() {
-	// workerPool()
-	// workerPoolResCombined()
-	// rateLimiting()
-	// atomicCounters()
-	// shareStateViaMutexes()
+	workerPool()
+	workerPoolResCombined()
+	rateLimiting()
+	atomicCounters()
+	shareStateViaMutexes()
 	shareStateViaGoRoutines()
 }
